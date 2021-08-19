@@ -1,0 +1,56 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+#this is a GPA calculator and Converter. 
+  #it will calculate the cumulative GPA and Undergrad Major GPA from a CSV file. 
+    # I made it because York has a strange, linear GPA measurement and it was hard to tell what my 4.0 GPA would look from my 9.0 gpa. 
+
+library(psych)
+library(ez)
+library(tidyr)  
+library(readr)
+library(dplyr)
+library(ggplot2)
+
+
+#import the Data
+data_gpa <- read_csv("data/GPA_data.csv")
+#calculate the weighted mean GPA for 9.0 grades
+weighted_mean_9.0_allgrades <- weighted.mean(x = data_gpa$GradePoints, w = data_gpa$Weights)
+
+#subset the data for just data from my undergrad major (which equals 2 in this csv file)
+majorgrades_9.0_data <- filter(data_gpa, Major == "2")
+#calculate weighted mean for just undergraduate major. 
+weighted_mean_9.0_Major <- weighted.mean(x = majorgrades_9.0_data$GradePoints, w = majorgrades_9.0_data$Weights)
+
+#this will convert all the grades into a the 4.0 system
+data_gpa_4.0 <- data_gpa %>% mutate(GradePoints = case_when(GradePoints == 9 ~ 4.0, 
+                                          GradePoints == 8 ~ 3.8,
+                                          GradePoints == 7 ~ 3.3,
+                                          GradePoints == 6 ~ 3.0,
+                                          TRUE ~ GradePoints))
+#technically no need to do this, but most GPA weighting systems are based around a value of 1.0 rather than 6.00 so I changed those as well for good measure. 
+data_gpa_4.0 <- data_gpa_4.0 %>% mutate(Weights = case_when(Weights == 9 ~ 1.5, Weights == 6 ~ 1, Weights == 3 ~ 0.5)) 
+
+#Weighted mean in 4.0 format for cumulative GPA
+weighted_mean_4.0_allgrades <- weighted.mean(x = data_gpa_4.0$GradePoints, w = data_gpa_4.0$Weights)
+#and for under
+majorgrades_4.0_data <- filter(data_gpa_4.0, Major == "2")
+weighted_mean_4.0_Major <- weighted.mean(x = majorgrades_4.0_data$GradePoints, w = majorgrades_4.0_data$Weights)
+
+
+
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
